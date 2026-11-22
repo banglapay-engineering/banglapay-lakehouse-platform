@@ -1,0 +1,11 @@
+targets:
+  prod:
+    mode: production
+
+    workspace:
+      host: https://dbc-f5635c5f-848f.cloud.databricks.com
+      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
+
+    variables:
+      environment_name: prod
+      data_volume_percent: "100"

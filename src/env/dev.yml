@@ -1,0 +1,12 @@
+targets:
+  dev:
+    mode: development
+    default: true
+
+    workspace:
+      host: https://dbc-f5635c5f-848f.cloud.databricks.com
+
+    variables:
+      environment_name: dev
+      data_volume_percent: "20"
+      workspace_host: https://dbc-f5635c5f-848f.cloud.databricks.com
