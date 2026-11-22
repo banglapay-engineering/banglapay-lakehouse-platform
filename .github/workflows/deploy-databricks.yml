@@ -1,0 +1,149 @@
+
+name: BanglaPay - Databricks DAB CI/CD
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Serialize deployments to prevent concurrent changes to DEV.
+concurrency:
+  group: banglapay-dab-deployment
+  cancel-in-progress: false
+
+jobs:
+
+  # --------------------------------------------------
+  # 1. VALIDATE
+  # --------------------------------------------------
+  validate:
+    name: Validate DAB Bundle
+    runs-on: ubuntu-latest
+    environment: dev
+    timeout-minutes: 20
+
+    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main'
+
+    env:
+      DATABRICKS_AUTH_TYPE: ${{ vars.DATABRICKS_AUTH_TYPE }}
+      DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
+      DATABRICKS_CLIENT_ID: ${{ vars.DATABRICKS_CLIENT_ID }}
+      DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
+
+      # Pass the GitHub Environment workspace URL
+      # to the DAB variable declared in databricks.yml.
+      BUNDLE_VAR_workspace_host: ${{ vars.DATABRICKS_HOST }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Install Databricks CLI
+        uses: databricks/setup-cli@v1.27.0
+
+      - name: Check bundle configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f databricks.yml
+          echo "DAB configuration file found."
+
+      - name: Verify authentication configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          test "$DATABRICKS_AUTH_TYPE" = "oauth-m2m"
+          test -n "$DATABRICKS_HOST"
+          test -n "$DATABRICKS_CLIENT_ID"
+          test -n "$DATABRICKS_CLIENT_SECRET"
+
+          echo "Authentication configuration is present."
+
+      - name: Verify Databricks identity
+        run: databricks current-user me --output json
+
+      - name: Validate DEV target
+        run: databricks bundle validate --target dev
+
+
+  # --------------------------------------------------
+  # 2. DEPLOY DEV
+  # --------------------------------------------------
+  deploy_dev:
+    name: Deploy to DEV
+    runs-on: ubuntu-latest
+    needs: validate
+    environment: dev
+    timeout-minutes: 30
+
+    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main'
+
+    env:
+      DATABRICKS_AUTH_TYPE: ${{ vars.DATABRICKS_AUTH_TYPE }}
+      DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
+      DATABRICKS_CLIENT_ID: ${{ vars.DATABRICKS_CLIENT_ID }}
+      DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
+      BUNDLE_VAR_workspace_host: ${{ vars.DATABRICKS_HOST }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Install Databricks CLI
+        uses: databricks/setup-cli@v1.27.0
+
+      - name: Verify DEV identity
+        run: databricks current-user me --output json
+
+      - name: Deploy DAB to DEV
+        run: databricks bundle deploy --target dev --auto-approve
+
+
+  # --------------------------------------------------
+  # 3. DEPLOY PROD
+  # --------------------------------------------------
+  deploy_prod:
+    name: Deploy to PROD
+    runs-on: ubuntu-latest
+    needs: deploy_dev
+    environment: prod
+    timeout-minutes: 30
+
+    # Only a release on main can deploy to PROD.
+    if: github.ref == 'refs/heads/main'
+
+    env:
+      DATABRICKS_AUTH_TYPE: ${{ vars.DATABRICKS_AUTH_TYPE }}
+      DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
+      DATABRICKS_CLIENT_ID: ${{ vars.DATABRICKS_CLIENT_ID }}
+      DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
+      BUNDLE_VAR_workspace_host: ${{ vars.DATABRICKS_HOST }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Install Databricks CLI
+        uses: databricks/setup-cli@v1.27.0
+
+      - name: Verify PROD identity
+        run: databricks current-user me --output json
+
+      - name: Validate PROD target
+        run: databricks bundle validate --target prod
+
+      - name: Deploy DAB to PROD
+        run: databricks bundle deploy --target prod --auto-approve
