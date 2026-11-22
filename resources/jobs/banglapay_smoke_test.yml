@@ -13,7 +13,7 @@ resources:
         - task_key: run_smoke_test
 
           notebook_task:
-            notebook_path: ../../src/notebook/dab_smoke_test.py.ipynb
+            notebook_path: ../../src/notebook/dab_smoke_test.py
             source: WORKSPACE
 
             base_parameters:
