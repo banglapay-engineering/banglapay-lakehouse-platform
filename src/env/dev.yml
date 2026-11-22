@@ -3,9 +3,7 @@ targets:
     mode: development
     default: true
 
-    workspace:
-      host: ${var.workspace_host}
-
     variables:
       environment_name: dev
       data_volume_percent: "20"
+
