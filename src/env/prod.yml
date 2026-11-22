@@ -3,7 +3,7 @@ targets:
     mode: production
 
     workspace:
-      host: https://dbc-f5635c5f-848f.cloud.databricks.com
+      host: ${var.workspace_host}
       root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
 
     variables:
