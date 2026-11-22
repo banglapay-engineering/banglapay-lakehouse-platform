@@ -3,6 +3,7 @@ variables:
 
   workspace_host:
     description: Databricks workspace URL from GitHub Environment
+    default: https://dbc-f5635c5f-848f.cloud.databricks.com
 
   environment_name:
     description: Deployment environment
