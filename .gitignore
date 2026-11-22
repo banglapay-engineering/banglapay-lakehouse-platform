@@ -169,6 +169,7 @@ conda-meta/
 # Rope project settings
 .ropeproject
 
+.git
 # mkdocs/Zensical documentation
 /site
 

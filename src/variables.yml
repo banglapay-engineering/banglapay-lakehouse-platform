@@ -1,0 +1,14 @@
+# Global bundle variables
+variables:
+
+  workspace_host:
+    description: Databricks workspace URL from GitHub Environment
+    type: string
+
+  environment_name:
+    description: Deployment environment
+    type: string
+
+  data_volume_percent:
+    description: Environment-specific data volume percentage
+    type: string
