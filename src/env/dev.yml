@@ -6,4 +6,3 @@ targets:
     variables:
       environment_name: dev
       data_volume_percent: "20"
-
