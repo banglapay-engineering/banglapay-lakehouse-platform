@@ -1,0 +1,15 @@
+
+# ============================================================
+# BanglaPay Lakehouse Platform
+# Databricks Asset Bundle Configuration
+# ============================================================
+
+bundle:
+  name: banglapay_lakehouse_platform
+
+# Resource definitions
+include:
+  - src/*.yml
+  - src/**/*.yml
+  - resources/*.yml
+  - resources/**/*.yml
