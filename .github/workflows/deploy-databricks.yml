@@ -12,18 +12,19 @@ on:
 permissions:
   contents: read
 
-# Serialize deployments to prevent concurrent changes to DEV.
+# Prevent concurrent deployments across environments.
 concurrency:
   group: banglapay-dab-deployment
   cancel-in-progress: false
 
 jobs:
 
-  # --------------------------------------------------
-  # 1. VALIDATE
-  # --------------------------------------------------
+  # ==================================================
+  # 1. VALIDATE DEV BUNDLE
+  # ==================================================
+
   validate:
-    name: Validate DAB Bundle
+    name: Validate DEV Bundle
     runs-on: ubuntu-latest
     environment: dev
     timeout-minutes: 20
@@ -36,9 +37,10 @@ jobs:
       DATABRICKS_CLIENT_ID: ${{ vars.DATABRICKS_CLIENT_ID }}
       DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
 
-      # Pass the GitHub Environment workspace URL
-      # to the DAB variable declared in databricks.yml.
       BUNDLE_VAR_workspace_host: ${{ vars.DATABRICKS_HOST }}
+
+      # DAB Run As identity
+      BUNDLE_VAR_run_as_service_principal_id: ${{ vars.DATABRICKS_CLIENT_ID }}
 
     steps:
       - name: Checkout repository
@@ -49,11 +51,13 @@ jobs:
       - name: Install Databricks CLI
         uses: databricks/setup-cli@v1.27.0
 
-      - name: Check bundle configuration
+      - name: Verify bundle configuration
         shell: bash
         run: |
           set -euo pipefail
+
           test -f databricks.yml
+
           echo "DAB configuration file found."
 
       - name: Verify authentication configuration
@@ -66,18 +70,31 @@ jobs:
           test -n "$DATABRICKS_CLIENT_ID"
           test -n "$DATABRICKS_CLIENT_SECRET"
 
-          echo "Authentication configuration is present."
+          echo "Authentication configuration verified."
 
-      - name: Verify Databricks identity
+      - name: Verify DAB Run As mapping
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          test -n "$BUNDLE_VAR_run_as_service_principal_id"
+
+          test "$BUNDLE_VAR_run_as_service_principal_id" \
+            = "$DATABRICKS_CLIENT_ID"
+
+          echo "DEV Run As identity mapping verified."
+
+      - name: Verify DEV Databricks identity
         run: databricks current-user me --output json
 
-      - name: Validate DEV target
+      - name: Validate DEV bundle
         run: databricks bundle validate --target dev
 
 
-  # --------------------------------------------------
-  # 2. DEPLOY DEV
-  # --------------------------------------------------
+  # ==================================================
+  # 2. DEPLOY TO DEV
+  # ==================================================
+
   deploy_dev:
     name: Deploy to DEV
     runs-on: ubuntu-latest
@@ -92,7 +109,10 @@ jobs:
       DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
       DATABRICKS_CLIENT_ID: ${{ vars.DATABRICKS_CLIENT_ID }}
       DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
+
       BUNDLE_VAR_workspace_host: ${{ vars.DATABRICKS_HOST }}
+
+      BUNDLE_VAR_run_as_service_principal_id: ${{ vars.DATABRICKS_CLIENT_ID }}
 
     steps:
       - name: Checkout repository
@@ -103,16 +123,32 @@ jobs:
       - name: Install Databricks CLI
         uses: databricks/setup-cli@v1.27.0
 
-      - name: Verify DEV identity
+      - name: Verify DEV authentication
         run: databricks current-user me --output json
+
+      - name: Verify DEV Run As mapping
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          test -n "$BUNDLE_VAR_run_as_service_principal_id"
+
+          test "$BUNDLE_VAR_run_as_service_principal_id" \
+            = "$DATABRICKS_CLIENT_ID"
+
+          echo "DEV Run As identity mapping verified."
+
+      - name: Validate DEV bundle
+        run: databricks bundle validate --target dev
 
       - name: Deploy DAB to DEV
         run: databricks bundle deploy --target dev --auto-approve
 
 
-  # --------------------------------------------------
-  # 3. DEPLOY PROD
-  # --------------------------------------------------
+  # ==================================================
+  # 3. DEPLOY TO PROD
+  # ==================================================
+
   deploy_prod:
     name: Deploy to PROD
     runs-on: ubuntu-latest
@@ -120,7 +156,7 @@ jobs:
     environment: prod
     timeout-minutes: 30
 
-    # Only a release on main can deploy to PROD.
+    # Only main branch releases can deploy to PROD.
     if: github.ref == 'refs/heads/main'
 
     env:
@@ -128,7 +164,10 @@ jobs:
       DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
       DATABRICKS_CLIENT_ID: ${{ vars.DATABRICKS_CLIENT_ID }}
       DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
+
       BUNDLE_VAR_workspace_host: ${{ vars.DATABRICKS_HOST }}
+
+      BUNDLE_VAR_run_as_service_principal_id: ${{ vars.DATABRICKS_CLIENT_ID }}
 
     steps:
       - name: Checkout repository
@@ -139,10 +178,22 @@ jobs:
       - name: Install Databricks CLI
         uses: databricks/setup-cli@v1.27.0
 
-      - name: Verify PROD identity
+      - name: Verify PROD authentication
         run: databricks current-user me --output json
 
-      - name: Validate PROD target
+      - name: Verify PROD Run As mapping
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          test -n "$BUNDLE_VAR_run_as_service_principal_id"
+
+          test "$BUNDLE_VAR_run_as_service_principal_id" \
+            = "$DATABRICKS_CLIENT_ID"
+
+          echo "PROD Run As identity mapping verified."
+
+      - name: Validate PROD bundle
         run: databricks bundle validate --target prod
 
       - name: Deploy DAB to PROD
