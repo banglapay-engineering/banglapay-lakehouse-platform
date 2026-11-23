@@ -39,6 +39,7 @@ jobs:
       # Pass the GitHub Environment workspace URL
       # to the DAB variable declared in databricks.yml.
       BUNDLE_VAR_workspace_host: ${{ vars.DATABRICKS_HOST }}
+      BUNDLE_VAR_run_as_service_principal_id: ${{ vars.DATABRICKS_CLIENT_ID }}
 
     steps:
       - name: Checkout repository
@@ -93,6 +94,7 @@ jobs:
       DATABRICKS_CLIENT_ID: ${{ vars.DATABRICKS_CLIENT_ID }}
       DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
       BUNDLE_VAR_workspace_host: ${{ vars.DATABRICKS_HOST }}
+      BUNDLE_VAR_run_as_service_principal_id: ${{ vars.DATABRICKS_CLIENT_ID }}
 
     steps:
       - name: Checkout repository
@@ -129,6 +131,7 @@ jobs:
       DATABRICKS_CLIENT_ID: ${{ vars.DATABRICKS_CLIENT_ID }}
       DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
       BUNDLE_VAR_workspace_host: ${{ vars.DATABRICKS_HOST }}
+      BUNDLE_VAR_run_as_service_principal_id: ${{ vars.DATABRICKS_CLIENT_ID }}
 
     steps:
       - name: Checkout repository
