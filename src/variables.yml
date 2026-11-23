@@ -8,5 +8,8 @@ variables:
   environment_name:
     description: Deployment environment
 
+  run_as_service_principal_id:
+    description: Application ID of the Service Principal used as the Lakeflow pipeline execution identity.
+
   data_volume_percent:
     description: Environment-specific data volume percentage
