@@ -2,6 +2,9 @@ targets:
   prod:
     mode: production
 
+    run_as:
+      service_principal_name: ${var.run_as_service_principal_id}
+
     workspace:
       root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
 

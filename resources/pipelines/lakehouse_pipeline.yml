@@ -1,0 +1,50 @@
+
+# ============================================================
+# BANGLAPAY LAKEHOUSE
+# Resource: Unified Lakehouse Pipeline
+#
+# DEV:
+#   Catalog : banglapay
+#   Schema  : bronze
+#   Mode    : Development
+#
+# PROD:
+#   Catalog : banglapay
+#   Schema  : bronze
+#   Mode    : Production
+#
+# Compute : Serverless
+# Execution: Triggered (default)
+# ============================================================
+
+resources:
+  pipelines:
+    banglapay_lakehouse:
+
+      name: BanglaPay Lakehouse - ${bundle.target}
+
+      # Unity Catalog destination
+      catalog: banglapay
+      schema: bronze
+
+      # Free Edition supports serverless compute only.
+      serverless: true
+      edition: ADVANCED
+      # Stable Lakeflow release channel
+      channel: CURRENT
+
+      # Source code files
+      libraries:
+        - glob:
+            include: ../../src/pipelines/bronze/**
+
+      # Runtime configuration
+      configuration:
+        spark.banglapay.environment: ${var.environment_name}
+
+      # Operational metadata
+      tags:
+        project: banglapay
+        platform: lakehouse
+        layer: bronze
+        managed_by: databricks_asset_bundle
