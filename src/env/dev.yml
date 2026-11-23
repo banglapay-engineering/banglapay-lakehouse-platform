@@ -3,7 +3,9 @@ targets:
     mode: development
     default: true
 
+    run_as:
+      service_principal_name: ${var.run_as_service_principal_id}
+
     variables:
       environment_name: dev
       data_volume_percent: "20"
-
