@@ -177,7 +177,7 @@ def register_batch_bronze_table(
                 "_source_database"
             ),
 
-            F.lit(source_schema).alias(
+            F.lit(source_schema).cast("string").alias(
                 "_source_schema"
             ),
 
